@@ -1,26 +1,18 @@
-FROM chinachu/mirakurun
-
-# ビルド環境構築
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    wget \
-    git \
-    autoconf \
-    automake \
-    && rm -rf /var/lib/apt/lists/*
-
-# デコーダーのインストール
-WORKDIR /tmp
-RUN wget -nv https://github.com/tsukumijima/libaribb25/releases/download/v0.2.10/libaribb25_0.2.10_amd64.deb && \
-    apt-get install -y --no-install-recommends ./libaribb25_0.2.10_amd64.deb
-
-# recpt1のインストール
-WORKDIR /tmp
-RUN git clone --depth=1 https://github.com/stz2012/recpt1.git
-WORKDIR /tmp/recpt1/recpt1
-RUN ./autogen.sh && \
-    ./configure && \
-    make -j "$(nproc)" && \
-    make install && \
-    make clean
-
+# recisdbのダウンロード
+# MirakurunのDockerイメージ内で行う場合、wgetコマンドを追加でインストールしなければならない。これは最終イメージサイズの増加に繋がる。
+# そこでMulti-stage buildを採用し、MirakurunのDockerイメージにはダウンロード済のrecisdb.debのみをコピーすることで最終イメージサイズを削減する。
+# Note: buildpack-deps:bookworm-curlは、wgetやcurlなどが予め同梱されている最小サイズのDockerイメージ。
+#       これを使うことにより、事前ビルド時にダウンロードしなければならないイメージサイズも最小化し、
+#       かつ、動的なapt-getコマンド実行を避けることでDockerイメージのビルド時間を高速化する。
+FROM buildpack-deps:bookworm-curl AS download-recisdb
 WORKDIR /app
+RUN wget --no-verbose https://github.com/kazuki0824/recisdb-rs/releases/download/1.2.4/recisdb_1.2.4-1_amd64.deb
+
+# MirakurunのDockerイメージを起動
+FROM chinachu/mirakurun
+WORKDIR /app
+# recisdb.debをMirakurunのDockerイメージ内へコピー
+COPY --from=download-recisdb /app/recisdb.deb /tmp
+# recisdbのインストール
+RUN apt-get install --assume-yes --no-install-recommends /tmp/recisdb.deb \
+    && rm /tmp/recisdb.deb

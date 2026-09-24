@@ -1,12 +1,14 @@
 /mirakurun/conf/*
-!/mirakurun/conf/channels.yml.example
-!/mirakurun/conf/tuners.yml.example
+!/mirakurun/conf/.gitkeep
 /mirakurun/data/*
 !/mirakurun/data/.gitkeep
+/mirakurun/opt/*
+!/mirakurun/opt/.gitkeep
+/mirakurun/run/*
+!/mirakurun/run/.gitkeep
 
-/EDCB/edcb/Common.ini
-/EDCB/edcb/EpgDataCap_Bon.ini
-/EDCB/edcb/EpgTimerSrv.ini
+/EDCB/edcb/*
+!/EDCB/edcb/Setting
 /EDCB/edcb/Setting/*
 !/EDCB/edcb/Setting/.gitkeep
 /EDCB/record/*

@@ -1,66 +1,149 @@
 services:
+  prepare_scan_tuners_and_channels:
+    image:
+      isdb-scanner
+    build:
+      context: ./scan-tuners-and-channels
+    container_name: PrepareDTV-ScanTunersAndChannels
+    volumes:
+      - ./mirakurun/conf:/mirakurun-config
+      - ./EDCB/edcb/Setting:/edcb-setting
+      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
+      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
+      - type: bind
+        source: /var/run/pcscd/pcscd.comm
+        target: /var/run/pcscd/pcscd.comm
+        read_only: true
+        bind:
+          create_host_path: false
+    devices:
+      - /dev/bus:/dev/bus
+      - /dev/pxmlt8video0
+      - /dev/pxmlt8video1
+      - /dev/pxmlt8video2
+      - /dev/pxmlt8video3
+      - /dev/pxmlt8video4
+      - /dev/pxmlt8video5
+      - /dev/pxmlt8video6
+      - /dev/pxmlt8video7
+    logging:
+      # ログはjournaldで記録する
+      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
+      # journaldの場合はログが /var/log/ 以下に集約される。
+      driver: journald
+      options:
+        tag: dtv-prepare-scan-tuners-and-channels
+        max-file: "1"
+        max-size: 10m
+    # いわゆるPID1問題を回避するため、Tiniを使用する
+    # see https://zenn.dev/sato_frontend/articles/fc49ffb2fe5dfc
+    init: true
+
+  # Note: Mirakurun公式の環境構築手順では、インストール時に `docker compose run --rm -e SETUP=true mirakurun` コマンドを実行している
+  #       see https://github.com/Chinachu/Mirakurun/blob/61c4155d2535c56fbf6fd379c5e8aba779fd642b/doc/Platforms.ja.md#%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB--%E3%82%A2%E3%83%B3%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB--%E3%82%A2%E3%83%83%E3%83%97%E3%83%87%E3%83%BC%E3%83%88
+  #       しかしソースコードを調査したところ、環境変数 `SETUP=true` は初回起動処理後にMirakurunを終了するための条件分岐のみで使用されている。
+  #       see https://github.com/Chinachu/Mirakurun/blob/61c4155d2535c56fbf6fd379c5e8aba779fd642b/src/server.ts#L94-L97
+  #       実際に動作検証しても、初回起動時のセットアップ処理は `docker compose up -d` コマンド実行時に自動で行われる。
+  #       おそらく `docker compose up -d` コマンドでセットアップ処理を完了させたあと、生成された各種設定ファイルを手動修正させることが目的であるものと考える。
+  #       よってこの手順では `docker compose run --rm -e SETUP=true mirakurun` コマンド相当の処理は省略している。
   mirakurun:
     image: mirakurun
     container_name: Mirakurun
+    depends_on:
+      prepare_scan_tuners_and_channels:
+        condition: service_completed_successfully
     build:
       context: ./mirakurun
+    environment:
+      TZ: Asia/Tokyo
+      DISABLE_PCSCD: "1"
+      DISABLE_B25_TEST: "1"
+      DOCKER_NETWORK: host
+      # for debug
+      LOG_LEVEL: "3"
+      DEBUG: true
+    # 削除してもMirakurunは正常に稼働しているように見える。
+    # 何のためにある設定値なのか不明。
+    # 念の為に公式に従い残しておく。
     cap_add:
       - SYS_ADMIN
       - SYS_NICE
+    # 削除してもMirakurunは正常に稼働しているように見える。
+    # おそらくコンテナ内のpcscdを使うために必要だが、そうであればこの構成には必要ない。
+    # 念の為に公式に従い残しておく。
+    device_cgroup_rules:
+      - 'c *:* rmw'
+    network_mode: host
     ports:
       - "40772:40772"
       - "9229:9229"
     volumes:
       - ./mirakurun/conf:/app-config
       - ./mirakurun/data:/app-data
-    environment:
-      TZ: "Asia/Tokyo"
+      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
+      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
+      - type: bind
+        source: /var/run/pcscd/pcscd.comm
+        target: /var/run/pcscd/pcscd.comm
+        read_only: true
+        bind:
+          create_host_path: false
     devices:
+      # ISDBScannerとは異なり、削除してもチューナーは認識され、Mirakurunも正常に稼働しているように見える。
+      # おそらく省略可能だが、念の為に公式に従い残しておく。
       - /dev/bus:/dev/bus
-      - /dev/px4video0:/dev/px4video0
-      - /dev/px4video1:/dev/px4video1
-      - /dev/px4video2:/dev/px4video2
-      - /dev/px4video3:/dev/px4video3
-    restart: always
+      - /dev/pxmlt8video0:/dev/pxmlt8video0
+      - /dev/pxmlt8video1:/dev/pxmlt8video1
+      - /dev/pxmlt8video2:/dev/pxmlt8video2
+      - /dev/pxmlt8video3:/dev/pxmlt8video3
+      - /dev/pxmlt8video4:/dev/pxmlt8video4
+      - /dev/pxmlt8video5:/dev/pxmlt8video5
+      - /dev/pxmlt8video6:/dev/pxmlt8video6
+      - /dev/pxmlt8video7:/dev/pxmlt8video7
+    tmpfs:
+      - /work2/tmp
     logging:
-      driver: json-file
+      # ログはjournaldで記録する
+      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
+      # journaldの場合はログが /var/log/ 以下に集約される。
+      driver: journald
       options:
+        tag: dtv-mirakurun
         max-file: "1"
         max-size: 10m
+    restart: always
 
-  mirakurun_init:
-    image: mirakurun
-    container_name: Mirakurun_init_container
-    build:
-      context: ./mirakurun
-    depends_on:
-      mirakurun:
-        condition: service_started
-    network_mode: host
-    command: [ "sh", "-c", "until wget -nv --spider http://localhost:40772/api/status; do sleep 3; done" ]
-
-  edcb_chscan:
-    image: edcb
-    container_name: EDCB_ChScan
+  # EDCBの設定ファイルを作成し、ホストのディレクトリに書き込む
+  # Note: 宛先パスが存在しない場合、Dockerはマウント時にファイルがあるべきパスにディレクトリを作成してしまう。
+  #       この挙動を回避するため、ホストとコンテナで共有するべき設定ファイルを予めホスト側に作成しておく。
+  edcb_create_config:
+    image: edcb:prepare.create-config
+    container_name: PrepareEDCB-CreateConfigFiles
     build:
       context: ./EDCB
     depends_on:
-      mirakurun_init:
+      prepare_scan_tuners_and_channels:
         condition: service_completed_successfully
     network_mode: host
     volumes:
-      - type: bind
-        source: "./EDCB/edcb/Common.ini"
-        target: "/var/local/edcb/Common.ini"
-      - type: bind
-        source: "./EDCB/edcb/EpgDataCap_Bon.ini"
-        target: "/var/local/edcb/EpgDataCap_Bon.ini"
-      - type: bind
-        source: "./EDCB/edcb/EpgTimerSrv.ini"
-        target: "/var/local/edcb/EpgTimerSrv.ini"
-      - type: bind
-        source: "./EDCB/edcb/Setting"
-        target: "/var/local/edcb/Setting"
+      - ./EDCB/edcb:/var/local/host_data/edcb
+      # チューナー数を取得するため、Mirakurunの設定ファイル格納ディレクトリもマウントする
+      # 書き込みは行わないため、ACCESS_MODEで`ro`（Read-only access）を指定。
+      - ./mirakurun/conf:/mirakurun-config:ro
+    # /var/local/edcb/ディレクトリ内から/var/local/host_data/edcbディレクトリへ設定ファイルをコピーする
+    # Note: コンテナ内の/var/local/edcb/ディレクトリには他の設定ファイルも含まれているが、ホストと共有するのは一部のみ。
+    #       よって/var/local/edcb/ディレクトリそのものをホストと共有することはできない。
+    #       そのため、一旦ホスト側のディレクトリを別の場所（/var/local/host_data/edcb）にマウントし、
+    #       そこへ/var/local/edcb/から設定ファイルをコピーすることで
+    #       必要な設定ファイルのみをホスト側に作成する。
+    command: /usr/local/bin/setup-ini.sh /var/local/host_data/edcb
+    logging:
+      # ログはjournaldで記録する
+      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
+      # journaldの場合はログが /var/log/ 以下に集約される。
+      driver: journald
+      options:
+        tag: dtv-prepare-edcb-create-config
 
   edcb:
     image: edcb
@@ -68,29 +151,38 @@ services:
     build:
       context: ./EDCB
     depends_on:
-      mirakurun_init:
+      edcb_create_config:
         condition: service_completed_successfully
-      edcb_chscan:
-        condition: service_completed_successfully
-    restart: always
+      mirakurun:
+        condition: service_started
     network_mode: host
-    command: /usr/local/bin/EpgTimerSrv
     volumes:
-      - type: bind
-        source: "./EDCB/edcb/Common.ini"
-        target: "/var/local/edcb/Common.ini"
-      - type: bind
-        source: "./EDCB/edcb/EpgDataCap_Bon.ini"
-        target: "/var/local/edcb/EpgDataCap_Bon.ini"
-      - type: bind
-        source: "./EDCB/edcb/EpgTimerSrv.ini"
-        target: "/var/local/edcb/EpgTimerSrv.ini"
-      - type: bind
-        source: "./EDCB/edcb/Setting"
-        target: "/var/local/edcb/Setting"
-      - type: bind
-        source: "./EDCB/record"
-        target: "/record"
+      - ./EDCB/edcb/Common.ini:/var/local/edcb/Common.ini
+      - ./EDCB/edcb/EpgDataCap_Bon.ini:/var/local/edcb/EpgDataCap_Bon.ini
+      - ./EDCB/edcb/EpgTimerSrv.ini:/var/local/edcb/EpgTimerSrv.ini
+      - ./EDCB/edcb/EpgTimerSrvDebugLog.txt:/var/local/edcb/EpgTimerSrvDebugLog.txt
+      - ./EDCB/edcb/EpgTimerSrvNotify.log:/var/local/edcb/EpgTimerSrvNotify.log
+      - ./EDCB/edcb/Setting:/var/local/edcb/Setting
+      - ${DTV_RECORD_DIR_PATH}:/record
+      # ファイル名変換PlugInの設定ファイル
+      # Note: もし /usr/local/lib/edcb ディレクトリ内に RecName*.so ファイルを追加配置する場合は、
+      #       対応する設定ファイルのパスもここに記載しマウントすること。
+      #       EDCB/setup-ini.sh の更新も忘れずに。
+      - ./EDCB/edcb/RecName_Macro.so.ini:/var/local/edcb/RecName_Macro.so.ini
+      # 出力PlugInの設定ファイル
+      # Note: もし /usr/local/lib/edcb ディレクトリ内に Write*.so ファイルを追加配置する場合は、
+      #       対応する設定ファイルのパスもここに記載しマウントすること。
+      #       EDCB/setup-ini.sh の更新も忘れずに。
+      - ./EDCB/edcb/Write_Default.so.ini:/var/local/edcb/Write_Default.so.ini
+
+    logging:
+      # ログはjournaldで記録する
+      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
+      # journaldの場合はログが /var/log/ 以下に集約される。
+      driver: journald
+      options:
+        tag: dtv-edcb
+    restart: always
 
   konomitv:
     image: konomitv
@@ -98,24 +190,32 @@ services:
     build:
       context: ./KonomiTV
     depends_on:
-      mirakurun_init:
+      mirakurun:
         condition: service_completed_successfully
       edcb:
         condition: service_started
-    restart: always
     network_mode: host
     volumes:
+      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
+      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
+      # でもそもそもkonomitvで要るの?
+      - ./KonomiTV/config.yaml:/code/config.yaml
+      - ./KonomiTV/server/data:/code/server/data
+      - /:/host-rootfs
       - type: bind
-        source: './KonomiTV/config.yaml'
-        target: '/code/config.yaml'
-      - type: bind
-        source: './KonomiTV/server/data/'
-        target: '/code/server/data/'
-      - type: bind
-        source: './KonomiTV/server/logs/'
-        target: '/code/server/logs/'
-      - type: bind
-        source: '/'
-        target: '/host-rootfs/'
+        source: /var/run/pcscd/pcscd.comm
+        target: /var/run/pcscd/pcscd.comm
+        read_only: true
+        bind:
+          create_host_path: false
     devices:
-      - '/dev/dri/:/dev/dri/'
+      - /dev/dri:/dev/dri
+    logging:
+      # ログはjournaldで記録する
+      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される。
+      driver: journald
+      options:
+        tag: dtv-konomitv
+        max-file: "1"
+        max-size: 10m
+    restart: always

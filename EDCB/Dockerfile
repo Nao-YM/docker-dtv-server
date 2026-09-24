@@ -14,33 +14,39 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # EDCBのビルド
 WORKDIR /tmp
-RUN git clone -b work-plus-s-260703 --depth=1 \
+RUN git clone -b work-plus-s-260904 --depth=1 \
     https://github.com/xtne6f/EDCB.git
 WORKDIR /tmp/EDCB/Document/Unix
-RUN make -j "$(nproc)" && \
-    make install && \
-    make extra -j "$(nproc)" && \
-    make install_extra && \
-    mkdir -p /var/local/edcb && \
-    make setup_ini && \
-    sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
-        /var/local/edcb/HttpPublic/legacy/util.lua
+RUN make -j "$(nproc)" \
+    && make install \
+    && make extra -j "$(nproc)" \
+    && make install_extra \
+    && mkdir -p /var/local/edcb \
+    && make setup_ini \
+    && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
+        /var/local/edcb/HttpPublic/legacy/util.lua \
+    && sed -i -e '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16| }' \
+        /var/local/edcb/EpgTimerSrv.ini \
+# Note: work-plus-s-250531時点のEDCBでは、`make setup_ini`コマンドはCommon.iniファイルを作成していない。
+#       このため直接コピーして作成している。
+#       see https://github.com/xtne6f/EDCB/blob/2b714764ff87199995a68efa065f759816c7bcee/Document/Unix/Makefile#L73-L83
+    && cp ./ini.template/Common.ini /var/local/edcb/Common.ini
 
 # EDCB Material WebUIのインストール
 WORKDIR /tmp
 RUN git clone --depth=1 https://github.com/EMWUI/EDCB_Material_WebUI.git
 WORKDIR /tmp/EDCB_Material_WebUI
-RUN cp -r HttpPublic /var/local/edcb/ && \
-    cp -r Setting /var/local/edcb/
+RUN cp -r HttpPublic /var/local/edcb/ \
+    && cp -r Setting /var/local/edcb/
 
 # BonDriver_LinuxMirakcのビルド
 WORKDIR /tmp
 RUN git clone --depth=1 --recurse-submodules \
     https://github.com/matching/BonDriver_LinuxMirakc.git
 WORKDIR /tmp/BonDriver_LinuxMirakc
-RUN make -j "$(nproc)" && \
-    cp BonDriver_LinuxMirakc.so /usr/local/lib/edcb/ && \
-    cp BonDriver_LinuxMirakc.so.ini_sample \
+RUN make -j "$(nproc)" \
+    && cp BonDriver_LinuxMirakc.so /usr/local/lib/edcb/ \
+    && cp BonDriver_LinuxMirakc.so.ini_sample \
         /usr/local/lib/edcb/BonDriver_LinuxMirakc.so.ini
 
 FROM debian:bookworm-slim AS runtime
@@ -56,11 +62,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ビルドステージから必要なファイルをコピー
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
 COPY --from=builder /usr/local/lib/edcb/ /usr/local/lib/edcb/
-RUN mkdir -p /var/local/edcb && \
-    chmod 777 /var/local/edcb
 COPY --from=builder /var/local/edcb/ /var/local/edcb/
+RUN chmod 777 /var/local/edcb
+
+# setup-ini.shとget-tuner-count.plをコピーして実行権限付与
+COPY --chmod=755 ./setup-ini.sh /usr/local/bin/setup-ini.sh
+COPY --chmod=755 ./get-tuner-count.pl /usr/local/bin/get-tuner-count.pl
 
 # デバッグ用に移動しておく
 WORKDIR /var/local/edcb
 
-CMD ["/usr/local/bin/EpgDataCap_Bon", "-d", "BonDriver_LinuxMirakc.so", "-chscan", "&&", "echo", "Exiting..."]
+CMD [ "/usr/local/bin/EpgTimerSrv" ]
