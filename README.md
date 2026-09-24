@@ -6,24 +6,12 @@ Dockerで構築するMirakurun + EDCB + KonomiTVなTV視聴・録画環境
 
 ## 概要
 
-[fork元]: https://github.com/nunawa/docker-dtv-server
-        : https://github.com/sounisi5011/docker-dtv-server
+[fork元](https://github.com/sounisi5011/docker-dtv-server)
+[fork元元](https://github.com/nunawa/docker-dtv-server)
 
 ## fork元からの変更点
 
-- ホストのpcscdを使う
-  - `/var/run/pcscd/pcscd.comm`が存在しない場合は、コンテナの起動そのものを禁止する
-- [recpt1](https://github.com/stz2012/recpt1)および[libaribb25](https://github.com/tsukumijima/libaribb25)の代わりに[recisdb]を使用
-- Dockerのログを[`json-file`](https://docs.docker.com/engine/logging/drivers/json-file/)の代わりに[`journald`](https://docs.docker.com/engine/logging/drivers/journald/)を使って書き込む
-- 初回起動時に[ISDBScanner]や自動起動コンテナを使用して[Mirakurun]および[EDCB]の設定ファイルを自動生成
-  - `./EDCB/edcb/Common.ini`  
-    `/record`を録画保存フォルダとして使用する設定で作成
-  - `./EDCB/edcb/EpgTimerSrv.ini`
-    - `HttpAccessControlList`に`+192.168.0.0/16`を追記
-    - 実際に検出したチューナー数に基づき、`BonDriver_LinuxMirakc`を利用するための設定を追記
-- [EDCB]の録画保存先ディレクトリを環境変数`DTV_RECORD_DIR_PATH`で定義できるように変更
-- 情報通知ログ、デバッグ出力ログ、同梱プラグインの設定ファイルもホスト側の`./EDCB/edcb`内にマウントするように変更
-- コンテナ起動時の[EDCB]のチャンネルスキャン実行を削除（[ISDBScanner]が生成するため不要と判断）
+- konomiTVを復活
 
 ## 技術スタック
 
@@ -33,8 +21,8 @@ Dockerで構築するMirakurun + EDCB + KonomiTVなTV視聴・録画環境
 - [BonDriver_LinuxMirakc](https://github.com/matching/BonDriver_LinuxMirakc)
 - [KonomiTV](https://github.com/tsukumijima/KonomiTV)
 - [Docker](https://www.docker.com/)
-- [recisdb]: https://github.com/kazuki0824/recisdb-rs
-- [ISDBScanner]: https://github.com/tsukumijima/ISDBScanner
+- [recisdb](https://github.com/kazuki0824/recisdb-rs)
+- [ISDBScanner](https://github.com/tsukumijima/ISDBScanner)
 
 ## Getting Started
 
@@ -51,9 +39,9 @@ Dockerで構築するMirakurun + EDCB + KonomiTVなTV視聴・録画環境
 本構成全体を格納するディレクトリへ移動後、以下のコマンドでこのリポジトリをダウンロード：
 
 ```bash
-# ダウンロード先ディレクトリの名称を変えたい場合は指定すること（この例では./dtv-server）
+# ダウンロード先ディレクトリの名称を変えたい場合は指定すること（この例では./Recorder）
 # 省略した場合はdocker-dtv-serverになる
-git clone --depth 1 https://github.com/sounisi5011/docker-dtv-server.git ./dtv-server
+git clone --depth 1 https://github.com/Nao-YM/docker-dtv-server.git ./Recorder
 ```
 
 その後、ダウンロードしたディレクトリ内（`./compose.yaml`ファイルが存在するディレクトリの直下）へ移動し、コンテナを起動する。
