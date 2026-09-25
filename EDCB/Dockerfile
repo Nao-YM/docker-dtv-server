@@ -17,6 +17,17 @@ WORKDIR /tmp
 RUN git clone -b work-plus-s-260904 --depth=1 \
     https://github.com/xtne6f/EDCB.git
 WORKDIR /tmp/EDCB/Document/Unix
+# RUN make -j "$(nproc)" \
+#     && make install \
+#     && make extra -j "$(nproc)" \
+#     && make install_extra \
+#     && mkdir -p /var/local/edcb \
+#     && make setup_ini \
+#     && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
+#         /var/local/edcb/HttpPublic/legacy/util.lua \
+#     && sed -i '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
+#         /var/local/edcb/EpgTimerSrv.ini \
+#     && echo CompatFlags=128 >> /var/local/edcb/EpgTimerSrv.ini \
 RUN make -j "$(nproc)" \
     && make install \
     && make extra -j "$(nproc)" \
@@ -24,14 +35,18 @@ RUN make -j "$(nproc)" \
     && mkdir -p /var/local/edcb \
     && make setup_ini \
     && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
-        /var/local/edcb/HttpPublic/legacy/util.lua \
-    && sed -i -e '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
-        /var/local/edcb/EpgTimerSrv.ini \
+         /var/local/edcb/HttpPublic/legacy/util.lua \
+    && sed -i '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
+         /var/local/edcb/EpgTimerSrv.ini \
     && echo CompatFlags=128 >> /var/local/edcb/EpgTimerSrv.ini \
 # Note: work-plus-s-250531時点のEDCBでは、`make setup_ini`コマンドはCommon.iniファイルを作成していない。
-#       このため直接コピーして作成している。
+#       このため直接作成する。
 #       see https://github.com/xtne6f/EDCB/blob/2b714764ff87199995a68efa065f759816c7bcee/Document/Unix/Makefile#L73-L83
-    && cp ./ini.template/Common.ini /var/local/edcb/Common.ini
+    && cat <<EOF > /var/local/edcb/Common.ini
+[SET]
+RecFolderPath0=/record
+RecFolderNum=1
+EOF
 
 # EDCB Material WebUIのインストール
 WORKDIR /tmp
