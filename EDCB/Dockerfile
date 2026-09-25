@@ -25,8 +25,9 @@ RUN make -j "$(nproc)" \
     && make setup_ini \
     && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
         /var/local/edcb/HttpPublic/legacy/util.lua \
-    && sed -i -e '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16| }' \
+    && sed -i -e '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
         /var/local/edcb/EpgTimerSrv.ini \
+    && echo CompatFlags=128 >> /var/local/edcb/EpgTimerSrv.ini \
 # Note: work-plus-s-250531時点のEDCBでは、`make setup_ini`コマンドはCommon.iniファイルを作成していない。
 #       このため直接コピーして作成している。
 #       see https://github.com/xtne6f/EDCB/blob/2b714764ff87199995a68efa065f759816c7bcee/Document/Unix/Makefile#L73-L83
