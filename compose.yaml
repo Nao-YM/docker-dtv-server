@@ -33,8 +33,6 @@ services:
       driver: journald
       options:
         tag: dtv-prepare-scan-tuners-and-channels
-        max-file: "1"
-        max-size: 10m
     # いわゆるPID1問題を回避するため、Tiniを使用する
     # see https://zenn.dev/sato_frontend/articles/fc49ffb2fe5dfc
     init: true
@@ -109,8 +107,6 @@ services:
       driver: journald
       options:
         tag: dtv-mirakurun
-        max-file: "1"
-        max-size: 10m
     restart: always
 
   # EDCBの設定ファイルを作成し、ホストのディレクトリに書き込む
@@ -216,6 +212,4 @@ services:
       driver: journald
       options:
         tag: dtv-konomitv
-        max-file: "1"
-        max-size: 10m
     restart: always
