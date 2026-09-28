@@ -16,7 +16,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     && rm /tmp/recisdb.deb
 
 # isdb-scannerのインストール
-RUN wget --no-verbose https://github.com/tsukumijima/ISDBScanner/releases/download/v1.3.3/isdb-scanner-arm -O /usr/local/bin/isdb-scanner \
+RUN wget --no-verbose https://github.com/tsukumijima/ISDBScanner/releases/download/v1.3.3/isdb-scanner -O /usr/local/bin/isdb-scanner \
     && chmod +x /usr/local/bin/isdb-scanner
 
 # entrypoint.shをコンテナ内にコピー
