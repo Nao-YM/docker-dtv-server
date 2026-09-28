@@ -73,6 +73,8 @@ services:
       - 'c *:* rmw'
     network_mode: host
     volumes:
+      - ./mirakurun/run:/var/run
+      - ./mirakurun/opt:/opt
       - ./mirakurun/conf:/app-config
       - ./mirakurun/data:/app-data
       # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
@@ -84,8 +86,6 @@ services:
         bind:
           create_host_path: false
     devices:
-      # ISDBScannerとは異なり、削除してもチューナーは認識され、Mirakurunも正常に稼働しているように見える。
-      # おそらく省略可能だが、念の為に公式に従い残しておく。
       - /dev/bus:/dev/bus
       - /dev/pxmlt8video0:/dev/pxmlt8video0
       - /dev/pxmlt8video1:/dev/pxmlt8video1
@@ -98,9 +98,6 @@ services:
     tmpfs:
       - /work2/tmp
     logging:
-      # ログはjournaldで記録する
-      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
-      # journaldの場合はログが /var/log/ 以下に集約される。
       driver: journald
       options:
         tag: dtv-mirakurun
@@ -120,8 +117,6 @@ services:
     network_mode: host
     volumes:
       - ./EDCB/edcb:/var/local/host_data/edcb
-      # チューナー数を取得するため、Mirakurunの設定ファイル格納ディレクトリもマウントする
-      # 書き込みは行わないため、ACCESS_MODEで`ro`（Read-only access）を指定。
       - ./mirakurun/conf:/mirakurun-config:ro
     # /var/local/edcb/ディレクトリ内から/var/local/host_data/edcbディレクトリへ設定ファイルをコピーする
     # Note: コンテナ内の/var/local/edcb/ディレクトリには他の設定ファイルも含まれているが、ホストと共有するのは一部のみ。
@@ -131,9 +126,6 @@ services:
     #       必要な設定ファイルのみをホスト側に作成する。
     command: /usr/local/bin/setup-ini.sh /var/local/host_data/edcb
     logging:
-      # ログはjournaldで記録する
-      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
-      # journaldの場合はログが /var/log/ 以下に集約される。
       driver: journald
       options:
         tag: dtv-prepare-edcb-create-config
@@ -157,21 +149,11 @@ services:
       - ./EDCB/edcb/EpgTimerSrvNotify.log:/var/local/edcb/EpgTimerSrvNotify.log
       - ./EDCB/edcb/Setting:/var/local/edcb/Setting
       - ${DTV_RECORD_DIR_PATH}:/record
-      # ファイル名変換PlugInの設定ファイル
-      # Note: もし /usr/local/lib/edcb ディレクトリ内に RecName*.so ファイルを追加配置する場合は、
-      #       対応する設定ファイルのパスもここに記載しマウントすること。
-      #       EDCB/setup-ini.sh の更新も忘れずに。
+      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/RecName_Macro.so.ini:/var/local/edcb/RecName_Macro.so.ini
-      # 出力PlugInの設定ファイル
-      # Note: もし /usr/local/lib/edcb ディレクトリ内に Write*.so ファイルを追加配置する場合は、
-      #       対応する設定ファイルのパスもここに記載しマウントすること。
-      #       EDCB/setup-ini.sh の更新も忘れずに。
+      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/Write_Default.so.ini:/var/local/edcb/Write_Default.so.ini
-
     logging:
-      # ログはjournaldで記録する
-      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
-      # journaldの場合はログが /var/log/ 以下に集約される。
       driver: journald
       options:
         tag: dtv-edcb
@@ -189,9 +171,6 @@ services:
         condition: service_started
     network_mode: host
     volumes:
-      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
-      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
-      # でもそもそもkonomitvで要るの?
       - ./KonomiTV/config.yaml:/code/config.yaml
       - ./KonomiTV/server/data:/code/server/data
       - /:/host-rootfs
@@ -204,8 +183,6 @@ services:
     devices:
       - /dev/dri:/dev/dri
     logging:
-      # ログはjournaldで記録する
-      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される。
       driver: journald
       options:
         tag: dtv-konomitv
