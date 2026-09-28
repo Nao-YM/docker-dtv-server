@@ -1,6 +1,9 @@
 FROM debian:bookworm-slim AS builder
 
 # ビルド環境構築
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' \
+      > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 	--mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && apt-get install --no-install-recommends -y \
@@ -160,7 +163,11 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     lua-zlib \
     ffmpeg \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    apt-get -y autoremove && \
+    apt-get -y clean && \
+    apt-get -y autopurge && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*
 
 # ビルドステージから必要なファイルをコピー
 COPY --from=builder /usr/local/bin/ /usr/local/bin/

@@ -14,10 +14,13 @@ WORKDIR /app
 # recisdb.debをMirakurunのDockerイメージ内へコピー
 COPY --from=download-recisdb /app/recisdb.deb /tmp
 # recisdbのインストール
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-	--mount=type=cache,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install --no-install-recommends -y \
+RUN apt-get update && apt-get install --no-install-recommends -y \
     # wgetは起動確認用
         wget \
         /tmp/recisdb.deb \
-    && rm /tmp/recisdb.deb
+    && rm /tmp/recisdb.deb \
+    && apt-get -y autoremove \
+    && apt-get -y clean \
+    && apt-get -y autopurge \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /tmp/*
