@@ -103,6 +103,18 @@ services:
         tag: dtv-mirakurun
     restart: always
 
+  # Mirakurunの初回起動処理が完了するまで待機するためのコンテナ
+  mirakurun_init:
+    image: mirakurun
+    container_name: Mirakurun_init_container
+    build:
+      context: ./mirakurun
+    depends_on:
+      mirakurun:
+        condition: service_started
+    network_mode: host
+    command: [ "sh", "-c", "until wget -nv --spider http://localhost:40772/api/status; do sleep 3; done" ]
+
   # EDCBの設定ファイルを作成し、ホストのディレクトリに書き込む
   # Note: 宛先パスが存在しない場合、Dockerはマウント時にファイルがあるべきパスにディレクトリを作成してしまう。
   #       この挙動を回避するため、ホストとコンテナで共有するべき設定ファイルを予めホスト側に作成しておく。
@@ -165,8 +177,8 @@ services:
     build:
       context: ./KonomiTV
     depends_on:
-      mirakurun:
-        condition: service_started
+      mirakurun_init:
+        condition: service_completed_successfully
       edcb:
         condition: service_started
     network_mode: host
