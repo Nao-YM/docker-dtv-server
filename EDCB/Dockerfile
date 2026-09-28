@@ -1,7 +1,9 @@
 FROM debian:bookworm-slim AS builder
 
 # ビルド環境構築
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+	--mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install --no-install-recommends -y \
     git \
     make \
     gcc \
@@ -151,7 +153,9 @@ EOF
 FROM debian:bookworm-slim AS runtime
 
 # ランタイム依存関係のみインストール
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+	--mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install --no-install-recommends -y \
     liblua5.2-dev \
     lua-zlib \
     ffmpeg \
