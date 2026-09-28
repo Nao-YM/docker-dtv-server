@@ -17,17 +17,6 @@ WORKDIR /tmp
 RUN git clone -b work-plus-s-260904 --depth=1 \
     https://github.com/xtne6f/EDCB.git
 WORKDIR /tmp/EDCB/Document/Unix
-# RUN make -j "$(nproc)" \
-#     && make install \
-#     && make extra -j "$(nproc)" \
-#     && make install_extra \
-#     && mkdir -p /var/local/edcb \
-#     && make setup_ini \
-#     && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
-#         /var/local/edcb/HttpPublic/legacy/util.lua \
-#     && sed -i '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
-#         /var/local/edcb/EpgTimerSrv.ini \
-#     && echo CompatFlags=128 >> /var/local/edcb/EpgTimerSrv.ini \
 RUN make -j "$(nproc)" \
     && make install \
     && make extra -j "$(nproc)" \
@@ -36,16 +25,93 @@ RUN make -j "$(nproc)" \
     && make setup_ini \
     && sed -i -e 's/^ALLOW_SETTING=.*/ALLOW_SETTING=true/' \
          /var/local/edcb/HttpPublic/legacy/util.lua \
-    && sed -i '/^HttpAccessControlList=/ { s|$|,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10| }' \
-         /var/local/edcb/EpgTimerSrv.ini \
-    && echo CompatFlags=128 >> /var/local/edcb/EpgTimerSrv.ini \
-# Note: work-plus-s-250531時点のEDCBでは、`make setup_ini`コマンドはCommon.iniファイルを作成していない。
-#       このため直接作成する。
-#       see https://github.com/xtne6f/EDCB/blob/2b714764ff87199995a68efa065f759816c7bcee/Document/Unix/Makefile#L73-L83
+    && rm /var/local/edcb/EpgTimerSrv.ini \
+    && cat <<EOF > /var/local/edcb/EpgTimerSrv.ini
+[SET]
+EnableHttpSrv=2
+HttpAccessControlList=+127.0.0.0/8,+10.0.0.0/8,+172.16.0.0/12,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10
+CompatFlags=128
+RecInfoFolderOnly=1
+ApplyExtToRecInfoDel=0
+AutoDel=0
+BackPriority=1
+FixedTunerPriority=1
+RetryOtherTuners=0
+SeparateFixedTuners=0
+CommentAutoAdd=0
+FixNoRecToServiceOnly=0
+RecNamePlugIn=1
+RecNamePlugInFile=RecName_Macro.so
+NoChkYen=0
+DelReserveMode=2
+EnableTCPSrv=1
+TCPIPv6=0
+TCPPort=4510
+TCPAccessControlList=+127.0.0.0/8,+10.0.0.0/8,+172.16.0.0/12,+192.168.0.0/16,+169.254.0.0/16,+100.64.0.0/10
+TCPResponseTimeoutSec=120
+EpgArchivePeriodHour=0
+SaveNotifyLog=0
+SaveDebugLog=0
+TimeSync=0
+AutoDelRecInfo=0
+AutoDelRecInfoNum=100
+RecInfo2Max=1000
+RecInfo2DropChk=2
+TSExt=.ts
+PresetID=
+WakeTime=5
+RecEndMode=0
+Reboot=0
+StartMargin=5
+EndMargin=2
+RecAppWakeTime=2
+RecMinWake=1
+RecView=1
+RecNW=0
+PgInfoLog=1
+DropLog=1
+RecOverWrite=0
+KeepDisk=1
+Caption=1
+Data=0
+[BonDriver_LinuxMirakc.so]
+Count=8
+GetEpg=1
+EPGCount=4
+Priority=0
+[REC_DEF]
+SetName=デフォルト
+RecMode=1
+NoRecMode=1
+Priority=2
+TuijyuuFlag=1
+ServiceMode=0
+PittariFlag=0
+BatFilePath=
+SuspendMode=4
+RebootFlag=0
+UseMargineFlag=0
+StartMargine=0
+EndMargine=0
+ContinueRec=0
+PartialRec=0
+TunerID=0
+[REC_DEF_FOLDER]
+Count=0
+[REC_DEF_FOLDER_1SEG]
+Count=0
+[NO_SUSPEND]
+NoFileStreaming=0
+NoStandbyTime=10
+EOF \
     && cat <<EOF > /var/local/edcb/Common.ini
 [SET]
 RecFolderPath0=/record
 RecFolderNum=1
+EOF \
+    && cat <<EOF > /var/local/edcb/RecName_Macro.so.ini
+[SET]
+RecNameMacro=$SDYYYY$-$SDMM$-$SDDD$-$STHH$$STMM$-$ZtoH(ServiceName)$-$ZtoH(Title2)$.ts
 EOF
 
 # EDCB Material WebUIのインストール
@@ -62,8 +128,25 @@ RUN git clone --depth=1 --recurse-submodules \
 WORKDIR /tmp/BonDriver_LinuxMirakc
 RUN make -j "$(nproc)" \
     && cp BonDriver_LinuxMirakc.so /usr/local/lib/edcb/ \
-    && cp BonDriver_LinuxMirakc.so.ini_sample \
-        /usr/local/lib/edcb/BonDriver_LinuxMirakc.so.ini
+    && cat <<EOF > /usr/local/lib/edcb/BonDriver_LinuxMirakc.so.ini
+[GLOBAL]
+SERVER_HOST="127.0.0.1"
+SERVER_PORT=40772
+
+SERVER_SOCKPATH="/var/run/mirakc.sock"
+
+; "http" or "unix"
+SERVER_TYPE="http"
+
+; B25(1=enable)
+DECODE_B25=0
+
+; Priority(0=Low Priority)
+PRIORITY=10
+
+; Service Split(1=enable)
+SERVICE_SPLIT=0
+EOF
 
 FROM debian:bookworm-slim AS runtime
 
