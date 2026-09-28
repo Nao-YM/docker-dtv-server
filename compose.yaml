@@ -185,13 +185,8 @@ services:
     volumes:
       - ./KonomiTV/config.yaml:/code/config.yaml
       - ./KonomiTV/server/data:/code/server/data
+      - ./server/logs:/code/server/logs
       - /:/host-rootfs
-      - type: bind
-        source: /var/run/pcscd/pcscd.comm
-        target: /var/run/pcscd/pcscd.comm
-        read_only: true
-        bind:
-          create_host_path: false
     devices:
       - /dev/dri:/dev/dri
     logging:
