@@ -184,9 +184,9 @@ services:
     network_mode: host
     volumes:
       - ./KonomiTV/config.yaml:/code/config.yaml
-      - ./KonomiTV/server/data:/code/server/data
-      - ./server/logs:/code/server/logs
-      - /:/host-rootfs
+      - ./KonomiTV/server/data:/code/server/data/
+      - ./server/logs:/code/server/logs/
+      - /:/host-rootfs/
     devices:
       - /dev/dri:/dev/dri
     logging:
