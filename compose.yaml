@@ -166,7 +166,7 @@ services:
       context: ./KonomiTV
     depends_on:
       mirakurun:
-        condition: service_completed_successfully
+        condition: service_started
       edcb:
         condition: service_started
     network_mode: host
