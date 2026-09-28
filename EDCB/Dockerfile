@@ -115,8 +115,7 @@ RecFolderPath0=/record
 RecFolderNum=1
 EOF \
     && cat <<EOF > /var/local/edcb/RecName_Macro.so.ini
-[SET]
-RecNameMacro=$SDYYYY$-$SDMM$-$SDDD$-$STHH$$STMM$-$ZtoH(ServiceName)$-$ZtoH(Title2)$.ts
+$SDYYYY$-$SDMM$-$SDDD$-$STHH$$STMM$-$ZtoH(ServiceName)$-$ZtoH(Title2)$.ts
 EOF
 
 # EDCB Material WebUIのインストール
@@ -163,11 +162,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     lua-zlib \
     ffmpeg \
     ca-certificates \
-    apt-get -y autoremove && \
-    apt-get -y clean && \
-    apt-get -y autopurge && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/*
+    && apt-get -y autoremove \
+    && apt-get -y clean \
+    && apt-get -y autopurge 
 
 # ビルドステージから必要なファイルをコピー
 COPY --from=builder /usr/local/bin/ /usr/local/bin/
