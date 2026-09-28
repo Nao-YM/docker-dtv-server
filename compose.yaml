@@ -113,7 +113,7 @@ services:
       mirakurun:
         condition: service_started
     network_mode: host
-    command: [ "sh", "-c", "until wget -nv --spider http://localhost:40772/api/status; do sleep 3; done" ]
+    command: [ "sh", "-c", "until wget -nv --spider http://127.0.0.1:40772/api/status; do sleep 3; done" ]
 
   # EDCBの設定ファイルを作成し、ホストのディレクトリに書き込む
   # Note: 宛先パスが存在しない場合、Dockerはマウント時にファイルがあるべきパスにディレクトリを作成してしまう。
