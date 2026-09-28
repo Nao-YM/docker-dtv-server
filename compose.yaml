@@ -72,9 +72,6 @@ services:
     device_cgroup_rules:
       - 'c *:* rmw'
     network_mode: host
-    ports:
-      - "40772:40772"
-      - "9229:9229"
     volumes:
       - ./mirakurun/conf:/app-config
       - ./mirakurun/data:/app-data
