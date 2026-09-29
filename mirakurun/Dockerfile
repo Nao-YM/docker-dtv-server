@@ -15,6 +15,8 @@ WORKDIR /app
 COPY --from=download-recisdb /app/recisdb.deb /tmp
 # recisdbのインストール
 RUN apt-get update && apt-get install --no-install-recommends -y \
+    # wgetは起動確認用
+        wget \
         /tmp/recisdb.deb \
     && rm /tmp/recisdb.deb \
     && apt-get -y autoremove \

@@ -105,7 +105,7 @@ services:
 
   # Mirakurunの初回起動処理が完了するまで待機するためのコンテナ
   mirakurun_init:
-    image: alpine
+    image: mirakurun
     container_name: Mirakurun_init_container
     build:
       context: ./mirakurun
