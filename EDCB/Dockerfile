@@ -115,7 +115,8 @@ RecFolderPath0=/record
 RecFolderNum=1
 EOF \
     && cat <<EOF > /var/local/edcb/RecName_Macro.so.ini
-$SDYYYY$-$SDMM$-$SDDD$-$STHH$$STMM$-$ZtoH(ServiceName)$-$ZtoH(Title2)$.ts
+[SET]
+Macro=$SDYYYY$-$SDMM$-$SDDD$-$STHH$$STMM$-$ZtoH(ServiceName)$-$ZtoH(Title2)$.ts
 EOF
 
 # EDCB Material WebUIのインストール

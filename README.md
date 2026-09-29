@@ -70,7 +70,7 @@ docker compose up -d --build
 1. `.env`ファイルを`compose.yaml`と同じ階層に作成。
 
     ```
-    DTV_RECORD_DIR_PATH=/mnt/sda1/record
+    DTV_RECORD_DIR_PATH=/mnt/work1/record
     ```
 
     その後、コンテナを起動する。
@@ -82,7 +82,7 @@ docker compose up -d --build
 2. コンテナの起動時に環境変数`DTV_RECORD_DIR_PATH`を指定する。
 
     ```bash
-    DTV_RECORD_DIR_PATH=/mnt/sda1/record docker compose up -d
+    DTV_RECORD_DIR_PATH=/mnt/work1/record docker compose up -d
     ```
 
 ## 設定ファイルやデータファイルなどの配置場所
