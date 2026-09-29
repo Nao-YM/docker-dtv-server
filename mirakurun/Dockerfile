@@ -17,7 +17,6 @@ COPY --from=download-recisdb /app/recisdb.deb /tmp
 RUN apt-get update && apt-get install --no-install-recommends -y \
     # wgetは起動確認用
         wget \
-    && apt-get install -y \
         /tmp/recisdb.deb \
     && rm /tmp/recisdb.deb \
     && apt-get -y autoremove \
