@@ -105,7 +105,7 @@ services:
 
   # Mirakurunの初回起動処理が完了するまで待機するためのコンテナ
   mirakurun_init:
-    image: mirakurun
+    image: alpine
     container_name: Mirakurun_init_container
     build:
       context: ./mirakurun
@@ -116,8 +116,6 @@ services:
     command: [ "sh", "-c", "until wget -nv --spider http://127.0.0.1:40772/api/status; do sleep 3; done" ]
 
   # EDCBの設定ファイルを作成し、ホストのディレクトリに書き込む
-  # Note: 宛先パスが存在しない場合、Dockerはマウント時にファイルがあるべきパスにディレクトリを作成してしまう。
-  #       この挙動を回避するため、ホストとコンテナで共有するべき設定ファイルを予めホスト側に作成しておく。
   edcb_create_config:
     image: edcb:prepare.create-config
     container_name: PrepareEDCB-CreateConfigFiles
@@ -150,8 +148,8 @@ services:
     depends_on:
       edcb_create_config:
         condition: service_completed_successfully
-      mirakurun:
-        condition: service_started
+      mirakurun_init:
+        condition: service_completed_successfully
     network_mode: host
     volumes:
       - ./EDCB/edcb/Common.ini:/var/local/edcb/Common.ini
@@ -186,7 +184,7 @@ services:
       - ./KonomiTV/config.yaml:/code/config.yaml
       - ./KonomiTV/server/data:/code/server/data
       - ./server/logs:/code/server/logs
-      - /mnt:/host-rootfs
+      - /:/host-rootfs
     devices:
       - /dev/dri:/dev/dri
     logging:

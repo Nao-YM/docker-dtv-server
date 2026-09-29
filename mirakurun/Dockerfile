@@ -4,7 +4,7 @@
 # Note: buildpack-deps:bookworm-curlは、wgetやcurlなどが予め同梱されている最小サイズのDockerイメージ。
 #       これを使うことにより、事前ビルド時にダウンロードしなければならないイメージサイズも最小化し、
 #       かつ、動的なapt-getコマンド実行を避けることでDockerイメージのビルド時間を高速化する。
-FROM buildpack-deps:bookworm-curl AS download-recisdb
+FROM alpine AS download-recisdb
 WORKDIR /app
 RUN wget --no-verbose https://github.com/kazuki0824/recisdb-rs/releases/download/1.2.4/recisdb_1.2.4-1_amd64.deb -O recisdb.deb
 
@@ -15,8 +15,6 @@ WORKDIR /app
 COPY --from=download-recisdb /app/recisdb.deb /tmp
 # recisdbのインストール
 RUN apt-get update && apt-get install --no-install-recommends -y \
-    # wgetは起動確認用
-        wget \
         /tmp/recisdb.deb \
     && rm /tmp/recisdb.deb \
     && apt-get -y autoremove \
