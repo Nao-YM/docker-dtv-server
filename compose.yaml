@@ -96,7 +96,7 @@ services:
       - /dev/pxmlt8video6:/dev/pxmlt8video6
       - /dev/pxmlt8video7:/dev/pxmlt8video7
     tmpfs:
-      - /work2/tmp
+      - /mnt/work2/tmp
     logging:
       driver: journald
       options:
