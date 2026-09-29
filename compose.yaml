@@ -8,8 +8,7 @@ services:
     volumes:
       - ./mirakurun/conf:/mirakurun-config
       - ./EDCB/edcb/Setting:/edcb-setting
-      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
-      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
+      # ホストのpcscdを使う。
       - type: bind
         source: /var/run/pcscd/pcscd.comm
         target: /var/run/pcscd/pcscd.comm
@@ -21,15 +20,13 @@ services:
       - /dev/pxmlt8video0
       - /dev/pxmlt8video1
       - /dev/pxmlt8video2
-      - /dev/pxmlt8video3
+      # - /dev/pxmlt8video3
       - /dev/pxmlt8video4
       - /dev/pxmlt8video5
       - /dev/pxmlt8video6
       - /dev/pxmlt8video7
     logging:
-      # ログはjournaldで記録する
-      # デフォルトのjson-fileはログが /var/lib/docker/containers/*/*-json.log ファイルに記録される一方、
-      # journaldの場合はログが /var/log/ 以下に集約される。
+      # ログはjournaldで記録する。
       driver: journald
       options:
         tag: dtv-prepare-scan-tuners-and-channels
@@ -77,8 +74,7 @@ services:
       - ./mirakurun/opt:/opt
       - ./mirakurun/conf:/app-config
       - ./mirakurun/data:/app-data
-      # ホストのpcscdを使う。これにより、ホストのpcscd.socketを止める必要がなくなる。
-      # また、カードリーダーのUSBが物理的に抜けた場合でも、USBを再接続すればコンテナを再起動することなく再認識される。
+      # ホストのpcscdを使う。
       - type: bind
         source: /var/run/pcscd/pcscd.comm
         target: /var/run/pcscd/pcscd.comm
@@ -90,7 +86,7 @@ services:
       - /dev/pxmlt8video0:/dev/pxmlt8video0
       - /dev/pxmlt8video1:/dev/pxmlt8video1
       - /dev/pxmlt8video2:/dev/pxmlt8video2
-      - /dev/pxmlt8video3:/dev/pxmlt8video3
+      # - /dev/pxmlt8video3:/dev/pxmlt8video3
       - /dev/pxmlt8video4:/dev/pxmlt8video4
       - /dev/pxmlt8video5:/dev/pxmlt8video5
       - /dev/pxmlt8video6:/dev/pxmlt8video6
@@ -128,12 +124,7 @@ services:
     volumes:
       - ./EDCB/edcb:/var/local/host_data/edcb
       - ./mirakurun/conf:/mirakurun-config:ro
-    # /var/local/edcb/ディレクトリ内から/var/local/host_data/edcbディレクトリへ設定ファイルをコピーする
-    # Note: コンテナ内の/var/local/edcb/ディレクトリには他の設定ファイルも含まれているが、ホストと共有するのは一部のみ。
-    #       よって/var/local/edcb/ディレクトリそのものをホストと共有することはできない。
-    #       そのため、一旦ホスト側のディレクトリを別の場所（/var/local/host_data/edcb）にマウントし、
-    #       そこへ/var/local/edcb/から設定ファイルをコピーすることで
-    #       必要な設定ファイルのみをホスト側に作成する。
+    # 既存の設定ファイルがない場合のみコピーする
     command: /usr/local/bin/setup-ini.sh /var/local/host_data/edcb
     logging:
       driver: journald
@@ -159,9 +150,7 @@ services:
       - ./EDCB/edcb/EpgTimerSrvNotify.log:/var/local/edcb/EpgTimerSrvNotify.log
       - ./EDCB/edcb/Setting:/var/local/edcb/Setting
       - ${DTV_RECORD_DIR_PATH}:/record
-      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/RecName_Macro.so.ini:/var/local/edcb/RecName_Macro.so.ini
-      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/Write_Default.so.ini:/var/local/edcb/Write_Default.so.ini
     logging:
       driver: journald
