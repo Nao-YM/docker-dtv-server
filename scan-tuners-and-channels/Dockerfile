@@ -2,12 +2,10 @@ FROM buildpack-deps:bookworm-curl
 WORKDIR /tmp
 
 # recisdbのインストール
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,target=/var/lib/apt,sharing=locked \
-    wget --no-verbose https://github.com/kazuki0824/recisdb-rs/releases/download/1.2.4/recisdb_1.2.4-1_amd64.deb -O ./recisdb.deb \
-    && apt-get install --no-install-recommends -y \
-    /tmp/recisdb.deb \
-    && rm /tmp/recisdb.deb \
+RUN wget --no-verbose https://github.com/kazuki0824/recisdb-rs/releases/download/1.2.4/recisdb_1.2.4-1_amd64.deb -O recisdb.deb \
+    && apt-get install -y \
+        recisdb.deb \
+    && rm recisdb.deb \
 # isdb-scannerのインストール
     && wget --no-verbose https://github.com/tsukumijima/ISDBScanner/releases/download/v1.3.3/isdb-scanner -O /usr/local/bin/isdb-scanner \
     && chmod +x /usr/local/bin/isdb-scanner
