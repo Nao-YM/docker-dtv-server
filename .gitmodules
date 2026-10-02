@@ -5,4 +5,4 @@
 [submodule "Amatsukaze"]
 	path = Amatsukaze
 	url = https://github.com/rigaya/Amatsukaze.git
-	branch = release
+	branch = master
