@@ -2,3 +2,7 @@
 	path = KonomiTV
 	url = https://github.com/Nao-YM/KonomiTV.git
 	branch = release
+[submodule "Amatsukaze"]
+	path = Amatsukaze
+	url = https://github.com/rigaya/Amatsukaze.git
+	branch = release

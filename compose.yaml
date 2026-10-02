@@ -181,3 +181,45 @@ services:
       options:
         tag: dtv-konomitv
     restart: always
+
+  amatsukaze:
+    image: amatsukaze
+    container_name: Amatsukaze
+    build:
+      context: ./Amatsukaze/docker
+      dockerfile: Dockerfile
+      args:
+        ENABLE_FASTER_WHISPER: "0"  # Faster-Whisper-XXLを含める場合は "1" に変更
+        ENABLE_VCEENCC: "0"  # VCEEncCを含める場合は "1" に変更
+    network_mode: host
+    environment:
+      # Amatsukazeを実行するユーザーIDとグループIDを指定
+      - RUN_UID=1000
+      - RUN_GID=1000
+    volumes:
+      - ./avs:/app/avs
+      - ./bat:/app/bat
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./drcs:/app/drcs
+      - ./JL:/app/JL
+      - ./logo:/app/logo
+      - ./profile:/app/profile
+      - /mnt/work1/trans:/app/input
+      - /mnt/record/records:/app/output
+      - /mnt/work2/tmp/:/tmp
+    # QSVEncC/VCEEncCを使うための設定
+    # /dev/driが環境にない場合は無効化が必要
+    devices:
+      - /dev/dri:/dev/dri
+      # CUDA/NVEncCを使うための設定
+      # ホスト側にNVIDIA Graphics DriverとNVIDIA Container Toolkitのインストールが必要
+      # NVIDIA GPUが環境にない場合は無効化が必要
+      # deploy:
+      #   resources:
+      #     reservations:
+      #       devices:
+      #         - driver: nvidia
+      #           count: all
+      #           capabilities: [compute, utility, video]
+    restart: always
