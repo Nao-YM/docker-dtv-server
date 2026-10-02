@@ -1,6 +1,7 @@
 [submodule "KonomiTV"]
 	path = KonomiTV
 	url = https://github.com/tsukumijima/KonomiTV.git
+	branch = master
 [submodule "Amatsukaze"]
 	path = Amatsukaze
 	url = https://github.com/rigaya/Amatsukaze.git
