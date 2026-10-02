@@ -175,6 +175,7 @@ services:
         condition: service_completed_successfully
       edcb:
         condition: service_started
+    user: 1000:1000
     network_mode: host
     volumes:
       - ./KonomiTV/config.yaml:/code/config.yaml
