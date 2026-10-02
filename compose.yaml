@@ -203,14 +203,14 @@ services:
       - RUN_UID=1000
       - RUN_GID=1000
     volumes:
-      - ./avs:/app/avs
-      - ./bat:/app/bat
-      - ./config:/app/config
-      - ./data:/app/data
-      - ./drcs:/app/drcs
-      - ./JL:/app/JL
-      - ./logo:/app/logo
-      - ./profile:/app/profile
+      - ./Amatsukaze/avs:/app/avs
+      - ./Amatsukaze/bat:/app/bat
+      - ./Amatsukaze/config:/app/config
+      - ./Amatsukaze/data:/app/data
+      - ./Amatsukaze/drcs:/app/drcs
+      - ./Amatsukaze/JL:/app/JL
+      - ./Amatsukaze/logo:/app/logo
+      - ./Amatsukaze/profile:/app/profile
       - /mnt/work1/trans:/app/input
       - /mnt/record/converted_records:/app/output
       - /mnt/work2/tmp/:/tmp
