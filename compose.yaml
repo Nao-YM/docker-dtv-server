@@ -149,8 +149,11 @@ services:
       - ./EDCB/edcb/EpgTimerSrvDebugLog.txt:/var/local/edcb/EpgTimerSrvDebugLog.txt
       - ./EDCB/edcb/EpgTimerSrvNotify.log:/var/local/edcb/EpgTimerSrvNotify.log
       - ./EDCB/edcb/Setting:/var/local/edcb/Setting
-      - ${DTV_RECORD_DIR_PATH}:/record
+      - /mnt/work1/records:/records1
+      - /mnt/record/records/:/records2
+      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/RecName_Macro.so.ini:/var/local/edcb/RecName_Macro.so.ini
+      # EDCB/setup-ini.sh の更新も忘れずに。
       - ./EDCB/edcb/Write_Default.so.ini:/var/local/edcb/Write_Default.so.ini
     logging:
       driver: journald
@@ -172,7 +175,7 @@ services:
     volumes:
       - ./KonomiTV/config.yaml:/code/config.yaml
       - ./KonomiTV/server/data:/code/server/data
-      - ./server/logs:/code/server/logs
+      - ./KonomiTV/server/logs:/code/server/logs
       - /:/host-rootfs
     devices:
       - /dev/dri:/dev/dri
@@ -206,7 +209,7 @@ services:
       - ./logo:/app/logo
       - ./profile:/app/profile
       - /mnt/work1/trans:/app/input
-      - /mnt/record/records:/app/output
+      - /mnt/record/converted_records:/app/output
       - /mnt/work2/tmp/:/tmp
     # QSVEncC/VCEEncCを使うための設定
     # /dev/driが環境にない場合は無効化が必要
